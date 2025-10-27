@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/system_monitor.dir/src/CPU.cpp.o CMakeFiles/system_monitor.dir/src/UI.cpp.o CMakeFiles/system_monitor.dir/src/main.cpp.o -o system_monitor  external/FTXUI/libftxui-screen.a external/FTXUI/libftxui-dom.a external/FTXUI/libftxui-component.a external/FTXUI/libftxui-dom.a external/FTXUI/libftxui-screen.a 
