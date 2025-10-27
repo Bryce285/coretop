@@ -10,9 +10,21 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core)
     coreUsage = std::clamp(coreUsage, 0.0f, 1.0f);
 
     return  ftxui::vbox({
-	    ftxui::text("CPU") | ftxui::bold | ftxui::center,
+	    ftxui::text(core.id) | ftxui::bold | ftxui::center,
 	    ftxui::separator(),
-	    ftxui::gauge(coreUsage) | ftxui::flex,
+	    ftxui::gaugeUp(coreUsage) | ftxui::flex,
 	    ftxui::text(std::to_string(usageDisplay).substr(0, 5) + "%") | ftxui::center
     }) | ftxui::border;
+}
+
+std::vector<ftxui::Element> UI::renderAllCPU(std::vector<CPU::CPUCore> cores)
+{
+    std::vector<ftxui::Element> CPUGauges;
+    CPUGauges.resize(cores.size());
+
+    for (size_t i = 0; i < cores.size(); ++i) {
+	CPUGauges[i] = renderCPUCore(cores[i]);
+    }
+
+    return CPUGauges;
 }
