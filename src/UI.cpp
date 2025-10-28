@@ -9,12 +9,15 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core)
     float usageDisplay = coreUsage * 100.0f;
     coreUsage = std::clamp(coreUsage, 0.0f, 1.0f);
 
-    return  ftxui::vbox({
-	    ftxui::text(core.id) | ftxui::bold | ftxui::center,
+    return  ftxui::hbox({
+	    ftxui::text(core.id) | ftxui::bold | ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 8),
 	    ftxui::separator(),
-	    ftxui::gaugeUp(coreUsage) | ftxui::flex,
+
+	    ftxui::gauge(coreUsage) | ftxui::flex,
+	    ftxui::separator(),
+
 	    ftxui::text(std::to_string(usageDisplay).substr(0, 5) + "%") | ftxui::center
-    }) | ftxui::border;
+    });
 }
 
 std::vector<ftxui::Element> UI::renderAllCPU(std::vector<CPU::CPUCore> cores)

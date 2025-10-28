@@ -61,7 +61,7 @@ int main()
 	}
     
 	std::vector<ftxui::Element> elements = ui.renderAllCPU(localCopy);
-	auto document = ftxui::hbox(elements);	
+	auto document = ftxui::vbox(elements);	
 	
 	screen.Clear();
 	Render(screen, document);
