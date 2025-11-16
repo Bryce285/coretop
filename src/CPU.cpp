@@ -17,6 +17,10 @@ CPU::CPU()
 std::vector<CPU::CPUCore> CPU::parseCores()
 {
     std::ifstream file("/proc/stat");
+    if (!file.is_open()) {
+	throw std::runtime_error("Failed to open /proc/stat");
+    }
+
     std::string line;
     std::vector<CPUCore> cores;
 
@@ -76,7 +80,7 @@ double CPU::getUsagePercent(unsigned long long idlePrev, unsigned long long idle
     return usagePercent;
 }
 
-void CPU::CPUUpdate(std::vector<CPU::CPUCore>& cores)
+void CPU::updateCores(std::vector<CPU::CPUCore>& cores)
 {
     std::vector<CPUCore> cur = parseCores();
 
@@ -109,4 +113,48 @@ void CPU::CPUUpdate(std::vector<CPU::CPUCore>& cores)
     
     cores = cur;
     coresLastCycle = std::move(cur);
+}
+
+CPU::UptimeData CPU::parseUptime()
+{
+    std::ifstream file("/proc/uptime");
+    if (!file.is_open()) {
+	throw std::runtime_error("Failed to open /proc/uptime");
+    }
+
+    CPU::UptimeData uptimeData;
+
+    file >> uptimeData.up >> uptimeData.idle;
+
+    return uptimeData;
+}
+
+void CPU::updateUptime()
+{
+    CPU::UptimeData cur = parseUptime();
+
+    unsigned long long uptimeRaw = static_cast<unsigned long long>(cur.up);
+    unsigned long long idleTimeRaw = static_cast<unsigned long long>(cur.idle);
+
+    uptime = secondsToTime(uptimeRaw);
+    idleTime = secondsToTime(idleTimeRaw);
+}
+
+CPU::Time CPU::secondsToTime(unsigned long long seconds)
+{
+    CPU::Time time;
+
+    time.days = seconds / 86400;
+    time.hours = (seconds % 86400) / 3600;
+    time.minutes = (seconds % 3600) / 60;
+    time.seconds = seconds % 60;
+
+    return time;
+}
+
+// call all update functions at once from here
+void CPU::CPUUpdate(std::vector<CPUCore>& cores)
+{
+    updateCores(cores);
+    updateUptime();
 }

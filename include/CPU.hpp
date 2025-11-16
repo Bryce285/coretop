@@ -6,6 +6,7 @@
 
 #pragma once
 
+// TODO - some of what is defined here should be static
 class CPU
 {
 public:
@@ -28,14 +29,36 @@ public:
 	double usagePercent = 0.0;
     };
 
+    struct Time
+    {
+	unsigned long long days = 0;
+	unsigned long long hours = 0;
+	unsigned long long minutes = 0;
+	unsigned long long seconds = 0;
+    };
+
+    Time uptime;
+    Time idleTime;
+
+    void CPUUpdate(std::vector<CPUCore>& cores);
+
+private:
+    struct UptimeData
+    {
+	long double up = 0.0;
+	long double idle = 0.0;
+    };
+
     std::vector<CPUCore> parseCores();
+    std::vector<CPUCore> coresLastCycle;
+    UptimeData parseUptime();
 
     unsigned long long getIdle(CPUCore core);
     unsigned long long getTotal(CPUCore core);
     double getUsagePercent(unsigned long long idlePrev, unsigned long long idleCur, unsigned long long totalPrev, unsigned long long totalCur);
 
-    void CPUUpdate(std::vector<CPUCore>& cores);
+    void updateCores(std::vector<CPUCore>& cores);
+    void updateUptime();
 
-private:
-    std::vector<CPUCore> coresLastCycle;
+    Time secondsToTime(unsigned long long seconds);
 };

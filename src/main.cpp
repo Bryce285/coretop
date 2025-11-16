@@ -24,12 +24,13 @@ std::mutex coresMutex;
 
 void Update() {
     while (!quit) {
-        std::vector<CPU::CPUCore> temp;
-        cpu.CPUUpdate(temp); 
+	// the new CPUUpdate is not implemented yet but this is how it should look
+        std::vector<CPU::CPUCore> coresTemp;
+        cpu.CPUUpdate(coresTemp);
 
         {
             std::lock_guard<std::mutex> lock(coresMutex);
-            cores = std::move(temp);  
+            cores = std::move(coresTemp);  
 	}
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -39,7 +40,6 @@ void Update() {
 int main()
 {   
     std::thread updater(Update);
-    //auto screen = ftxui::Screen::Create(ftxui::Dimension::Fixed(60), ftxui::Dimension::Fixed(30));
     std::string resetPosition;
 
     while (!quit) {
@@ -60,7 +60,7 @@ int main()
 	    localCopy = cores;
 	}
     
-	ftxui::Element document = ui.renderAllCPU(localCopy);
+	ftxui::Element document = ui.renderAllCPU(localCopy, cpu.uptime, cpu.idleTime);
 	
 	auto screen = ftxui::Screen::Create(ftxui::Dimension::Fixed(60), ftxui::Dimension::Fit(document));
 	screen.Clear();

@@ -1,4 +1,6 @@
 #include <ftxui/dom/elements.hpp>
+#include <string>
+#include <format>
 
 #include "UI.hpp"
 #include "CPU.hpp"
@@ -20,7 +22,20 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core)
     });
 }
 
-ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores)
+ftxui::Element UI::renderUptime(CPU::Time uptime, CPU::Time idleTime)
+{
+    std::string uptimeStr = std::format("{:02}:{:02}:{:02}:{:02}", uptime.days, uptime.hours, uptime.minutes, uptime.seconds);
+
+    std::string idleTimeStr = std::format("{:02}:{:02}:{:02}:{:02}", idleTime.days, idleTime.hours, idleTime.minutes, idleTime.seconds);
+
+    return  ftxui::hbox({
+	    ftxui::text("System Uptime " + uptimeStr),
+	    ftxui::filler(),
+	    ftxui::text("System Idle Time " + idleTimeStr)
+	    });
+}
+
+ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime)
 {
     std::vector<ftxui::Element> CPUGauges;
     CPUGauges.resize(cores.size());
@@ -29,10 +44,17 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores)
 	CPUGauges[i] = renderCPUCore(cores[i]);
     }
 
-    auto document = ftxui::vbox({
+    auto gaugesElement = ftxui::vbox({
 	    ftxui::bold(ftxui::text("CPU Utilization")), 
 	    ftxui::separator(), 
 	    ftxui::vbox(CPUGauges)
+	    }) | ftxui::border;
+
+    auto uptimeElement = renderUptime(uptime, idleTime);
+
+    auto document = ftxui::vbox({
+	    gaugesElement,
+	    uptimeElement
 	    }) | ftxui::border;
 
     return document;
