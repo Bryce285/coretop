@@ -6,7 +6,6 @@
 
 #pragma once
 
-// TODO - some of what is defined here should be static
 class CPU
 {
 public:
