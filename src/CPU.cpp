@@ -155,6 +155,31 @@ CPU::Time CPU::secondsToTime(unsigned long long seconds)
     return time;
 }
 
+std::String CPU::parseName()
+{
+    std::ifstream file("/proc/cpuinfo");
+    if (!file.is_open()){
+        throw std::runtime_error("Failed to open /proc/cpuinfo");
+    }
+
+    std::string cpuName;
+    std::string line;
+
+    while (std::getline(file, line)){
+        if (line.rfind("model name", 0) == 0){
+            size_t pos = line.find(':');
+            if (pos != std::string::npos){
+                cpuName = line.substr(pos + 1);
+                cpuName.erase(0, cpuName.find_first_not_of("\t"));
+            }
+        }
+        
+        break;
+    }
+
+    return cpuName;
+}
+
 // call all update functions at once from here
 void CPU::CPUUpdate(std::vector<CPUCore>& cores)
 {
