@@ -63,8 +63,12 @@ int main()
             if (cores.empty()) continue;
             localCopy = cores;
         }
-
-        ftxui::Element document = ui.renderAllCPU(localCopy, cpu.uptime, cpu.idleTime, cpuName, memory.memoryData, memory.memStressPercent);
+        
+        // TODO - use current stats instead of last for memInfo and vmStat
+        ftxui::Element document = ui.renderAllCPU(localCopy, 
+                cpu.uptime, cpu.idleTime, cpuName, 
+                memory.memoryData, memory.pressurePercent, 
+                memory.lastMemInfo, memory.lastVmStatInfo);
 
         auto screen = ftxui::Screen::Create(ftxui::Dimension::Full(), ftxui::Dimension::Full());
         screen.Clear();

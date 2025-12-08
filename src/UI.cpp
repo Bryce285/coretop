@@ -12,7 +12,7 @@ UI::UI(int numCores)
     // temporary CPUCore object for initialization
     CPU::CPUCore tempCore;
 
-    // 2d vector to store cpu util % gauges from the last 20 refreshes for each core
+    // 2d vector to store cpu util % gauges from the last 10 refreshes for each core
     UI::CPUGauges.resize(numCores);
     int numGauges = 10;
     for (size_t i = 0; i < UI::CPUGauges.size(); ++i) {
@@ -21,7 +21,7 @@ UI::UI(int numCores)
     }
 }
 
-ftxui::Element UI::renderCPUCore(CPU::CPUCore core, float memStressPercent)
+ftxui::Element UI::renderCPUCore(CPU::CPUCore core, double memPressure)
 {
     float coreUsage = static_cast<float>(core.usagePercent) / 100.0f;
     float usageDisplay = coreUsage * 100.0f;
@@ -30,29 +30,29 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core, float memStressPercent)
     int red = 0;
     int green = 0;
     int blue = 0;
-    if (memStressPercent <= 25.0f) {
+    if (memPressure <= 25.0f) {
         // green
         red = 63;
         green = 142;
         blue = 79;
     }
-    else if (memStressPercent > 25.0f && memStressPercent <= 50.0f) {
+    else if (memPressure > 25.0f && memPressure <= 50.0f) {
         // yellow
-        red = 245;
-        green = 203;
-        blue = 41;
+        red = 179;
+        green = 168;
+        blue = 70;
     }
-    else if (memStressPercent > 50.0f && memStressPercent <= 75.0f) {
+    else if (memPressure > 50.0f && memPressure <= 75.0f) {
         // orange
-        red = 218;
-        green = 110;
-        blue = 24;
+        red = 227;
+        green = 158;
+        blue = 84;
     }
-    else if (memStressPercent > 75.0f && memStressPercent <= 100.0f) {
+    else if (memPressure > 75.0f && memPressure <= 100.0f) {
         // red
-        red = 186;
-        green = 64;
-        blue = 64;
+        red = 214;
+        green = 77;
+        blue = 77;
     }
     else {
         // grey
@@ -63,8 +63,94 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core, float memStressPercent)
     }
 
     return  ftxui::vbox({
-            ftxui::gaugeUp(coreUsage) | ftxui::bgcolor(ftxui::Color::RGB(red, green, blue)) | ftxui::flex
+            ftxui::gaugeUp(coreUsage) 
+            | ftxui::bgcolor(ftxui::Color::RGB(red, green, blue)) 
+            | ftxui::flex
             });
+}
+
+ftxui::Element UI::renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure)
+{
+    std::vector<ftxui::Element> elements;
+
+    // TODO - find out why bold decorator isn't working
+    ftxui::Element label =  ftxui::hbox({
+                            ftxui::bold(ftxui::text("Memory"))});
+    elements.push_back(label);
+
+    ftxui::Element pressurePercent =    ftxui::hbox({
+                                        ftxui::text("Pressure"),
+                                        ftxui::filler(),
+                                        ftxui::text(std::to_string(memPressure) + " %")
+                                        });
+    elements.push_back(pressurePercent);
+
+    ftxui::Element available =  ftxui::hbox({
+                                ftxui::text("Available"),
+                                ftxui::filler(),
+                                ftxui::text(std::to_string(memInfo.available) + " kB")
+                                });
+    elements.push_back(available);
+
+    ftxui::Element dirty =  ftxui::hbox({
+                            ftxui::text("Dirty"),
+                            ftxui::filler(),
+                            ftxui::text(std::to_string(memInfo.dirty) + " kB")
+                            });
+    elements.push_back(dirty);
+
+    ftxui::Element writeback =  ftxui::hbox({
+                                ftxui::text("Writeback"),
+                                ftxui::filler(),
+                                ftxui::text(std::to_string(memInfo.writeback) + " kB")
+                                });
+    elements.push_back(writeback);
+
+    ftxui::Element cached = ftxui::hbox({
+                            ftxui::text("Cached"),
+                            ftxui::filler(),
+                            ftxui::text(std::to_string(memInfo.cached) + " kB")
+                            });
+    elements.push_back(cached);
+
+    ftxui::Element active = ftxui::hbox({
+                            ftxui::text("Active"),
+                            ftxui::filler(),
+                            ftxui::text(std::to_string(memInfo.active) + " kB")
+                            });
+    elements.push_back(active);
+
+    ftxui::Element pgFault =    ftxui::hbox({
+                                ftxui::text("Page Faults"),
+                                ftxui::filler(),
+                                ftxui::text(std::to_string(vmStat.pgFault))
+                                });
+    elements.push_back(pgFault);
+
+    ftxui::Element pgMajFault = ftxui::hbox({
+                                ftxui::text("Major Page Faults"),
+                                ftxui::filler(),
+                                ftxui::text(std::to_string(vmStat.pgMajFault))
+                                });
+    elements.push_back(pgMajFault);
+
+    ftxui::Element pSwpIn = ftxui::hbox({
+                            ftxui::text("Page Swap In"),
+                            ftxui::filler(),
+                            ftxui::text(std::to_string(vmStat.pSwpIn) + " /second")
+                            });
+    elements.push_back(pSwpIn);
+
+    ftxui::Element pSwpOut = ftxui::hbox({
+                                ftxui::text("Page Swap Out"),
+                                ftxui::filler(),
+                                ftxui::text(std::to_string(vmStat.pSwpOut) + " /second")
+                                });
+    elements.push_back(pSwpOut);
+
+    ftxui::Element allMemory = ftxui::vbox(elements);
+
+    return allMemory;
 }
 
 ftxui::Element UI::renderHeader(CPU::Time uptime, CPU::Time idleTime, Memory::MemUsage memoryData)
@@ -85,7 +171,7 @@ ftxui::Element UI::renderHeader(CPU::Time uptime, CPU::Time idleTime, Memory::Me
             });
 }
 
-ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, float memStressPercent)
+ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, double memPressure, Memory::MemInfo memInfo, Memory::VmStat vmStat)
 {
     UI::CPUGauges.resize(cores.size());
 
@@ -96,7 +182,7 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
 
     for (size_t i = 0; i < cores.size(); ++i) {
         CPU::CPUCore curCore = cores[i];
-        UI::CPUGauges[i].push_back(renderCPUCore(curCore, memStressPercent));
+        UI::CPUGauges[i].push_back(renderCPUCore(curCore, memPressure));
         UI::CPUGauges[i].erase(UI::CPUGauges[i].begin());
 
         auto utilGraph = ftxui::vbox({
@@ -104,8 +190,6 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
                         ftxui::text(curCore.id) | ftxui::center
                         }),
                 
-                // TODO - show the background color somewhere else near the gauge as well so
-                // that even when the cpu is at 100% utilization the memory info is still visible
                 ftxui::hbox(UI::CPUGauges[i])
                 | ftxui::border
                 | ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN, minGraphHeight)
@@ -129,14 +213,16 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
     }
 
     auto allGraphs = ftxui::hbox(spacedGraphs) | ftxui::xflex;
-
     auto header = renderHeader(uptime, idleTime, memoryData);
+    auto memoryStats = renderMemory(memInfo, vmStat, memPressure);
     
     auto document = ftxui::window(ftxui::text(cpuName) | ftxui::bold,
             ftxui::vbox({
                 header,
                 ftxui::separator(),
-                allGraphs | ftxui::yflex
+                allGraphs | ftxui::yflex,
+                ftxui::separator(),
+                memoryStats
                 }) | ftxui::yflex);
 
     return document;

@@ -8,5 +8,5 @@ A Linux TUI app to view CPU stats.
 
 ## TODO
 1. Add current frequency, temperature, and base frequency to CPU section
-2. Test/tweak weights for memory stress calculation
-3. Polish/add to memory part of the UI
+2. Finish adding memory stats
+3. Polish UI

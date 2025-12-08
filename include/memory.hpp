@@ -33,31 +33,28 @@ class Memory
             unsigned long long pSwpIn = 0;
             unsigned long long pSwpOut = 0;
         };
+        
+        struct Pressure
+        {
+            double avg10Some = 0.0;
+            double avg10Full = 0.0;
+        };
 
         MemUsage memoryData;
+        
+        // TODO - totals and stats from the last refresh period should
+        // both be displayed on the UI, as well as an indication of whether
+        // they increased or decreased since the last refresh
         MemInfo lastMemInfo;
         VmStat lastVmStatInfo;
-        float memStressPercent = 0.0f;
+
+        Pressure lastPressureInfo;
+        double pressurePercent = 0.0;
 
         void memoryUpdate();
 
     private:
-        // max rates for normalization
-        const int MAX_PGMAJFAULT = 20;
-        const int MAX_PGFAULT = 2000;
-        const int MAX_PSWP = 10;
-        const int MAX_WRITEBACK = 50;
-        
-        // weights for calculating memory stress value
-        const float W_PGMAJFAULT = 0.28f;
-        const float W_PGFAULT = 0.07f;
-        const float W_PSWP = 0.23f;
-        const float W_AVAILABLE = 0.20f;
-        const float W_DIRTY = 0.06f;
-        const float W_WRITEBACK = 0.06f;
-        const float W_CACHED = 0.05f;
-        const float W_ACTIVE = 0.05f;
-
         MemInfo parseMemory();
         VmStat parseVmStat();
+        Pressure parsePressure();
 };

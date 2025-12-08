@@ -10,7 +10,7 @@
 
 Memory::Memory()
 {
-    // TODO - may need to explicitly set lastMemInfo and lastVmStatInfo
+    // TODO - may need to explicitly set lastMemInfo, lastVmStatInfo, lastPressureInfo
     // and maybe calculate memoryData from here initially
     memoryUpdate();
 }
@@ -96,43 +96,60 @@ Memory::VmStat Memory::parseVmStat()
     return vmStat;
 }
 
+Memory::Pressure Memory::parsePressure()
+{
+    std::ifstream file("/proc/pressure/memory");
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open /proc/pressure/memory");
+    }
+
+    std::string line;
+    Pressure pressure;
+
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string label;
+        std::string avg10;
+        std::string avg60;
+        std::string avg300;
+        std::string total;
+        
+        if (line.rfind("some", 0) == 0) {
+            iss >> label >> avg10 >> avg60 >> avg300 >> total;
+
+            avg10 = avg10.substr(avg10.find('=') + 1);
+            pressure.avg10Some = std::stod(avg10);
+        }
+        else if (line.rfind("full", 0) == 0) {
+            iss >> label >> avg10 >> avg60 >> avg300 >> total;
+
+            avg10 = avg10.substr(avg10.find('=') + 1);
+            pressure.avg10Full = std::stod(avg10);
+        }
+    }
+
+    return pressure;
+}
+
 void Memory::memoryUpdate()
 {
     VmStat curVmStatInfo = parseVmStat();
     MemInfo curMemInfo = parseMemory();
+    Pressure curPressureInfo = parsePressure();
     unsigned long long total = curMemInfo.total;
     unsigned long long available = curMemInfo.available;
-
-    int pgMajFaultDelta = static_cast<int>(curVmStatInfo.pgMajFault - lastVmStatInfo.pgMajFault);
-    int pgFaultDelta = static_cast<int>(curVmStatInfo.pgFault - lastVmStatInfo.pgFault);
-    int pSwpInDelta = static_cast<int>(curVmStatInfo.pSwpIn - lastVmStatInfo.pSwpIn);
-    int pSwpOutDelta = static_cast<int>(curVmStatInfo.pSwpOut - lastVmStatInfo.pSwpOut);
-    int writebackDelta = static_cast<int>(curMemInfo.writeback - lastMemInfo.writeback);
-
-    int normalMajFault = std::clamp(pgMajFaultDelta / MAX_PGMAJFAULT, 0, 1);
-    int normalFault = std::clamp(pgFaultDelta / MAX_PGFAULT, 0, 1);
-    int normalSwpIn = std::clamp(pSwpInDelta / MAX_PSWP, 0, 1);
-    int normalSwpOut = std::clamp(pSwpOutDelta / MAX_PSWP, 0, 1);
-    int normalSwp = (normalSwpIn + normalSwpOut) / 2;
-
-    int normalAvailable = std::clamp(1 - (static_cast<int>(available / total)), 0, 1);
-    int normalDirty = std::clamp(static_cast<int>(curMemInfo.dirty / total), 0, 1);
-    int normalWriteback = std::clamp(static_cast<int>(writebackDelta / MAX_WRITEBACK), 0, 1);
-    int normalCached = std::clamp(1 - (static_cast<int>(curMemInfo.cached / total)), 0, 1);
-    int normalActive = std::clamp(static_cast<int>(curMemInfo.active / total), 0, 1);
-
-    float memStressRawVal = W_PGMAJFAULT * normalMajFault +
-        W_PGFAULT * normalFault +
-        W_PSWP * normalSwp +
-        W_AVAILABLE * normalAvailable + 
-        W_DIRTY * normalDirty + 
-        W_WRITEBACK * normalWriteback +
-        W_CACHED * normalCached +
-        W_ACTIVE * normalActive;
     
-    // TODO - consider applying smoothing to this value
-    memStressPercent = std::round(std::clamp(memStressRawVal, 0.0f, 1.0f) * 100.0f);
-    
+    const double SOME_MAX_STALL_PERCENT = 10.0;
+    const double FULL_MAX_STALL_PERCENT = 2.0;
+    const double FULL_WEIGHT = 0.7;
+    const double SOME_WEIGHT = 0.3;
+
+    double someNormalized = std::clamp(curPressureInfo.avg10Some / SOME_MAX_STALL_PERCENT, 0.0, 1.0);
+    double fullNormalized = std::clamp(curPressureInfo.avg10Full / FULL_MAX_STALL_PERCENT, 0.0, 1.0);
+    double pressure = std::clamp(FULL_WEIGHT * fullNormalized + SOME_WEIGHT * someNormalized, 0.0, 1.0);
+
+    pressurePercent = std::round(pressure * 100.0);
+ 
     if (total == 0 || total < available) {
         memoryData.total = 0;
         memoryData.usage = 0;
@@ -147,4 +164,5 @@ void Memory::memoryUpdate()
     // set last to current in preparation for next update
     lastMemInfo = curMemInfo;
     lastVmStatInfo = curVmStatInfo;
+    lastPressureInfo = curPressureInfo;
 }
