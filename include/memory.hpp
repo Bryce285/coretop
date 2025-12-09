@@ -39,17 +39,41 @@ class Memory
             double avg10Some = 0.0;
             double avg10Full = 0.0;
         };
+        
+        struct MemInfoDiff
+        {
+            long available = 0;
+            long dirty = 0;
+            long writeback = 0;
+            long cached = 0;
+            long active = 0;
+        };
+
+        struct VmStatInstantDiff
+        {
+            long pgFault = 0;
+            long pgMajFault = 0;
+            long pSwpIn = 0;
+            long pSwpOut = 0;
+        };
 
         MemUsage memoryData;
         
-        // TODO - totals and stats from the last refresh period should
-        // both be displayed on the UI, as well as an indication of whether
-        // they increased or decreased since the last refresh
+        MemInfo curMemInfo;
         MemInfo lastMemInfo;
+        MemInfoDiff memInfoDiff;
+
+        VmStat curVmStatInfo;
         VmStat lastVmStatInfo;
 
-        Pressure lastPressureInfo;
+        // to store instantaneous vmstat values
+        VmStat curVmStatInstant;
+        VmStat lastVmStatInstant;
+        VmStatInstantDiff vmStatInstantDiff;
+        
         double pressurePercent = 0.0;
+        double lastPressurePercent = 0.0;
+        float pressurePercentDiff = 0.0;
 
         void memoryUpdate();
 

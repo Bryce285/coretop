@@ -10,8 +10,6 @@
 
 Memory::Memory()
 {
-    // TODO - may need to explicitly set lastMemInfo, lastVmStatInfo, lastPressureInfo
-    // and maybe calculate memoryData from here initially
     memoryUpdate();
 }
 
@@ -133,8 +131,8 @@ Memory::Pressure Memory::parsePressure()
 
 void Memory::memoryUpdate()
 {
-    VmStat curVmStatInfo = parseVmStat();
-    MemInfo curMemInfo = parseMemory();
+    curVmStatInfo = parseVmStat();
+    curMemInfo = parseMemory();
     Pressure curPressureInfo = parsePressure();
     unsigned long long total = curMemInfo.total;
     unsigned long long available = curMemInfo.available;
@@ -161,8 +159,44 @@ void Memory::memoryUpdate()
         memoryData.usage = usage;
     }
 
+    pressurePercentDiff = static_cast<float>(pressurePercent - lastPressurePercent);
+    
+    long availableDiff = static_cast<long>(curMemInfo.available - lastMemInfo.available);
+    long dirtyDiff = static_cast<long>(curMemInfo.dirty - lastMemInfo.dirty);
+    long writebackDiff = static_cast<long>(curMemInfo.writeback - lastMemInfo.writeback);
+    long cachedDiff = static_cast<long>(curMemInfo.cached - lastMemInfo.cached);
+    long activeDiff = static_cast<long>(curMemInfo.active - lastMemInfo.active);
+
+    memInfoDiff.available = availableDiff;
+    memInfoDiff.dirty = dirtyDiff;
+    memInfoDiff.writeback = writebackDiff;
+    memInfoDiff.cached = cachedDiff;
+    memInfoDiff.active = activeDiff;
+
+    // the values parsed from vmstat are cumulative so we convert them to instantaneous
+    unsigned long long pgFaultDiff = curVmStatInfo.pgFault - lastVmStatInfo.pgFault;
+    unsigned long long pgMajFaultDiff = curVmStatInfo.pgMajFault - lastVmStatInfo.pgMajFault;
+    unsigned long long pSwpInDiff = curVmStatInfo.pSwpIn - lastVmStatInfo.pSwpIn;
+    unsigned long long pSwpOutDiff = curVmStatInfo.pSwpOut - lastVmStatInfo.pSwpOut;
+
+    curVmStatInstant.pgFault = pgFaultDiff;
+    curVmStatInstant.pgMajFault = pgMajFaultDiff;
+    curVmStatInstant.pSwpIn = pSwpInDiff;
+    curVmStatInstant.pSwpOut = pSwpOutDiff;
+
+    long pgFaultInstantDiff = static_cast<long>(curVmStatInstant.pgFault - lastVmStatInstant.pgFault);
+    long pgMajFaultInstantDiff = static_cast<long>(curVmStatInstant.pgMajFault - lastVmStatInstant.pgMajFault);
+    long pSwpInInstantDiff = static_cast<long>(curVmStatInstant.pSwpIn - lastVmStatInstant.pSwpIn);
+    long pSwpOutInstantDiff = static_cast<long>(curVmStatInstant.pSwpOut - lastVmStatInstant.pSwpOut);
+
+    vmStatInstantDiff.pgFault = pgFaultInstantDiff;
+    vmStatInstantDiff.pgMajFault = pgMajFaultInstantDiff;
+    vmStatInstantDiff.pSwpIn = pSwpInInstantDiff;
+    vmStatInstantDiff.pSwpOut = pSwpOutInstantDiff;
+
     // set last to current in preparation for next update
     lastMemInfo = curMemInfo;
     lastVmStatInfo = curVmStatInfo;
-    lastPressureInfo = curPressureInfo;
+    lastVmStatInstant = curVmStatInstant;
+    lastPressurePercent = pressurePercent;
 }

@@ -2,6 +2,7 @@
 //#include <ftxui/util/color.hpp>
 #include <string>
 #include <format>
+#include <cmath>
 
 #include "UI.hpp"
 #include "CPU.hpp"
@@ -69,82 +70,96 @@ ftxui::Element UI::renderCPUCore(CPU::CPUCore core, double memPressure)
             });
 }
 
-ftxui::Element UI::renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure)
+ftxui::Element UI::renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure, Memory::MemInfoDiff memInfoDiff, Memory::VmStatInstantDiff vmStatInstantDiff, float memPressureDiff)
 {
     std::vector<ftxui::Element> elements;
 
-    // TODO - find out why bold decorator isn't working
-    ftxui::Element label =  ftxui::hbox({
-                            ftxui::bold(ftxui::text("Memory"))});
+    ftxui::Element label =  ftxui::vbox({
+                            ftxui::hbox({
+                            ftxui::bold(ftxui::text("Memory Stat")),
+                            ftxui::filler(),
+                            ftxui::text("Value [instantaneous]") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                            ftxui::text("Change since last refresh") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)}),
+                            ftxui::separator()});
     elements.push_back(label);
 
     ftxui::Element pressurePercent =    ftxui::hbox({
                                         ftxui::text("Pressure"),
                                         ftxui::filler(),
-                                        ftxui::text(std::to_string(memPressure) + " %")
-                                        });
+                                        ftxui::text(std::to_string(static_cast<int>(memPressure)) + " %") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                        ftxui::text(std::to_string(static_cast<int>(memPressureDiff)) + " %") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
+                                        }) | ftxui::bgcolor(ftxui::Color::RGB(20, 20, 20));
     elements.push_back(pressurePercent);
 
     ftxui::Element available =  ftxui::hbox({
                                 ftxui::text("Available"),
                                 ftxui::filler(),
-                                ftxui::text(std::to_string(memInfo.available) + " kB")
+                                ftxui::text(std::to_string(memInfo.available) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                ftxui::text(std::to_string(memInfoDiff.available) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
                                 });
     elements.push_back(available);
 
     ftxui::Element dirty =  ftxui::hbox({
                             ftxui::text("Dirty"),
                             ftxui::filler(),
-                            ftxui::text(std::to_string(memInfo.dirty) + " kB")
-                            });
+                            ftxui::text(std::to_string(memInfo.dirty) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                            ftxui::text(std::to_string(memInfoDiff.dirty) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
+                            }) | ftxui::bgcolor(ftxui::Color::RGB(20, 20, 20));
     elements.push_back(dirty);
 
     ftxui::Element writeback =  ftxui::hbox({
                                 ftxui::text("Writeback"),
                                 ftxui::filler(),
-                                ftxui::text(std::to_string(memInfo.writeback) + " kB")
+                                ftxui::text(std::to_string(memInfo.writeback) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                ftxui::text(std::to_string(memInfoDiff.writeback) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
                                 });
     elements.push_back(writeback);
 
     ftxui::Element cached = ftxui::hbox({
                             ftxui::text("Cached"),
                             ftxui::filler(),
-                            ftxui::text(std::to_string(memInfo.cached) + " kB")
-                            });
+                            ftxui::text(std::to_string(memInfo.cached) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                            ftxui::text(std::to_string(memInfoDiff.cached) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
+                            }) | ftxui::bgcolor(ftxui::Color::RGB(20, 20, 20));
     elements.push_back(cached);
 
     ftxui::Element active = ftxui::hbox({
                             ftxui::text("Active"),
                             ftxui::filler(),
-                            ftxui::text(std::to_string(memInfo.active) + " kB")
+                            ftxui::text(std::to_string(memInfo.active) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                            ftxui::text(std::to_string(memInfoDiff.active) + " kB") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
                             });
     elements.push_back(active);
 
     ftxui::Element pgFault =    ftxui::hbox({
                                 ftxui::text("Page Faults"),
                                 ftxui::filler(),
-                                ftxui::text(std::to_string(vmStat.pgFault))
-                                });
+                                ftxui::text(std::to_string(vmStat.pgFault) + " last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                ftxui::text(std::to_string(vmStatInstantDiff.pgFault) + " last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
+                                }) | ftxui::bgcolor(ftxui::Color::RGB(20, 20, 20));
     elements.push_back(pgFault);
 
     ftxui::Element pgMajFault = ftxui::hbox({
                                 ftxui::text("Major Page Faults"),
                                 ftxui::filler(),
-                                ftxui::text(std::to_string(vmStat.pgMajFault))
+                                ftxui::text(std::to_string(vmStat.pgMajFault) + " last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                ftxui::text(std::to_string(vmStatInstantDiff.pgMajFault) + " last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
                                 });
     elements.push_back(pgMajFault);
 
     ftxui::Element pSwpIn = ftxui::hbox({
                             ftxui::text("Page Swap In"),
                             ftxui::filler(),
-                            ftxui::text(std::to_string(vmStat.pSwpIn) + " /second")
-                            });
+                            ftxui::text(std::to_string(vmStat.pSwpIn) + " pages last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                            ftxui::text(std::to_string(vmStatInstantDiff.pSwpIn) + " pages last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
+                            }) | ftxui::bgcolor(ftxui::Color::RGB(20, 20, 20));
     elements.push_back(pSwpIn);
 
     ftxui::Element pSwpOut = ftxui::hbox({
                                 ftxui::text("Page Swap Out"),
                                 ftxui::filler(),
-                                ftxui::text(std::to_string(vmStat.pSwpOut) + " /second")
+                                ftxui::text(std::to_string(vmStat.pSwpOut) + " pages last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50),
+                                ftxui::text(std::to_string(vmStatInstantDiff.pSwpOut) + " pages last second") | size(ftxui::WIDTH, ftxui::GREATER_THAN, 50)
                                 });
     elements.push_back(pSwpOut);
 
@@ -161,17 +176,19 @@ ftxui::Element UI::renderHeader(CPU::Time uptime, CPU::Time idleTime, Memory::Me
 
     std::string totalStr = std::to_string(memoryData.total);
     std::string usageStr = std::to_string(memoryData.usage);
+    double usagePercent = (static_cast<double>(memoryData.usage) / static_cast<double>(memoryData.total)) * 100.0;
+    std::string usagePercentStr = std::to_string(static_cast<int>(usagePercent));
 
     return  ftxui::hbox({
             ftxui::text("System up time: " + uptimeStr),
             ftxui::filler(),
-            ftxui::text("Memory Usage: [ " + usageStr + " / " + totalStr + " ] kB"),
+            ftxui::text("Memory Usage: [ " + usageStr + " / " + totalStr + " kB ] [ " + usagePercentStr + " % ]"),
             ftxui::filler(),
             ftxui::text("Time in idle process: " + idleTimeStr)
             });
 }
 
-ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, double memPressure, Memory::MemInfo memInfo, Memory::VmStat vmStat)
+ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, double memPressure, Memory::MemInfo memInfo, Memory::VmStat vmStat, Memory::MemInfoDiff memInfoDiff, Memory::VmStatInstantDiff vmStatInstantDiff, float memPressureDiff)
 {
     UI::CPUGauges.resize(cores.size());
 
@@ -191,7 +208,7 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
                         }),
                 
                 ftxui::hbox(UI::CPUGauges[i])
-                | ftxui::border
+                | ftxui::borderLight
                 | ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN, minGraphHeight)
                 | ftxui::yflex,
 
@@ -214,7 +231,7 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
 
     auto allGraphs = ftxui::hbox(spacedGraphs) | ftxui::xflex;
     auto header = renderHeader(uptime, idleTime, memoryData);
-    auto memoryStats = renderMemory(memInfo, vmStat, memPressure);
+    auto memoryStats = renderMemory(memInfo, vmStat, memPressure, memInfoDiff, vmStatInstantDiff, memPressureDiff);
     
     auto document = ftxui::window(ftxui::text(cpuName) | ftxui::bold,
             ftxui::vbox({

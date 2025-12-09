@@ -15,10 +15,10 @@ class UI
         ftxui::Element renderCPUCore(CPU::CPUCore core, double memPressure);
         ftxui::Element renderHeader(CPU::Time uptime, CPU::Time idleTime, Memory::MemUsage memoryData);
 
-        ftxui::Element renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure);
+        ftxui::Element renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure, Memory::MemInfoDiff memInfoDiff, Memory::VmStatInstantDiff vmStatInstantDiff, float memPressureDiff);
 
     public:
         UI(int numCores);
 
-        ftxui::Element renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, double memPressure, Memory::MemInfo memInfo, Memory::VmStat vmStat);
+        ftxui::Element renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptime, CPU::Time idleTime, std::string cpuName, Memory::MemUsage memoryData, double memPressure, Memory::MemInfo memInfo, Memory::VmStat vmStat, Memory::MemInfoDiff memInfoDiff, Memory::VmStatInstantDiff vmStatInstantDiff, float memPressureDiff);
 };
