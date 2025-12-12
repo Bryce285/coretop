@@ -26,6 +26,7 @@ class CPU
             unsigned long long guest_nice = 0;
 
             double usagePercent = 0.0;
+            float frequency = 0.0f; 
         };
 
         struct Time

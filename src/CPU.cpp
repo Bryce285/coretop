@@ -6,8 +6,6 @@
 #include <sstream>
 #include <algorithm>
 
-//#define DEBUG_PRINTS
-
 CPU::CPU()
 {
     std::vector<CPU::CPUCore> coresData = CPU::parseCores();
@@ -49,9 +47,26 @@ std::vector<CPU::CPUCore> CPU::parseCores()
         core.steal = steal;
         core.guest = guest;
         core.guest_nice = guest_nice;
+	
+		// sysfs file for system-wide cpu doesn't exist so don't try to open it
+		if (core.id != "cpu") {	
+			std::string path = "/sys/devices/system/cpu/" + core.id + "/cpufreq/scaling_cur_freq";
+			std::ifstream freqFile(path);
+			if (!file.is_open()) {
+				throw std::runtime_error("Failed to open " + path);
+			}
+
+			long double freqkHz;
+			freqFile >> freqkHz;
+			float freqGHz = static_cast<float>(freqkHz / 1000000.0L);
+			core.frequency = freqGHz;
+
+			freqFile.close();
+		}
 
         cores.push_back(core);
-    }
+    }	
+
     return cores;    
 }
 
@@ -93,6 +108,10 @@ void CPU::updateCores(std::vector<CPU::CPUCore>& cores)
         return;
     }
 
+	// sysfs doesn't inlcude system-wide frequency so we calculate it separately
+	float sysFreq = 0.0f;
+	float allCoresUtil = 0.0f;
+
     // calculate usage percent for each core
     // use coresLastCycle for the calculations
     for (size_t i = 0; i < cur.size(); ++i) {
@@ -104,15 +123,24 @@ void CPU::updateCores(std::vector<CPU::CPUCore>& cores)
 
         double usage = getUsagePercent(idlePrev, idleCur, totalPrev, totalCur);
 
-#ifdef DEBUG_PRINTS
-        std::cout << cur[i].id
-            << " idleDelta=" << (idleCur - idlePrev)
-            << " totalDelta=" << (totalCur - totalPrev)
-            << " usage=" << usage << "%\n";
-#endif
+		cur[i].usagePercent = usage;
 
-        cur[i].usagePercent = usage;
+		if (cur[i].id != "cpu") {
+			float usageScaled = usage / 100.0f;
+			sysFreq += cur[i].frequency * usageScaled;
+			allCoresUtil += usageScaled;
+		}
     }
+
+	for (size_t i = 0; i < cur.size(); ++i) {
+		if (cur[i].id == "cpu") {
+			if (allCoresUtil > 0.0f) 
+				cur[i].frequency = sysFreq / allCoresUtil;
+			else 
+				cur[i].frequency = 0;
+			break;
+		}
+	}
 
     cores = cur;
     coresLastCycle = std::move(cur);

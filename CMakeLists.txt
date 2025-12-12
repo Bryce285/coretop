@@ -9,9 +9,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(external/FTXUI)
 
 file(GLOB SOURCES "src/*.cpp")
-add_executable(system_monitor ${SOURCES})
+add_executable(coretop ${SOURCES})
 
-target_link_libraries(system_monitor
+target_link_libraries(coretop
   PRIVATE
     ftxui::screen
     ftxui::dom

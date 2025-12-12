@@ -1,5 +1,4 @@
 #include <ftxui/dom/elements.hpp>
-//#include <ftxui/util/color.hpp>
 #include <string>
 #include <format>
 #include <cmath>
@@ -215,7 +214,12 @@ ftxui::Element UI::renderAllCPU(std::vector<CPU::CPUCore> cores, CPU::Time uptim
                 ftxui::hbox({
                         ftxui::text(std::to_string(curCore.usagePercent).substr(0, 5) + "%")
                         | ftxui::center
-                        })
+						}),
+
+				ftxui::hbox({
+					ftxui::text(std::to_string(curCore.frequency).substr(0, 3) + " GHz")
+					| ftxui::center
+					})
                 }) | ftxui::yflex;
 
         graphs.push_back(utilGraph);

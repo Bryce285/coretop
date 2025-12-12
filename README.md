@@ -7,5 +7,4 @@ A Linux TUI app to view CPU stats.
 <br>
 
 ## TODO
-1. Add current frequency, temperature, and base frequency to CPU section
-3. Polish UI
+1. Update UI to handle lots of cores
