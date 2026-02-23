@@ -7,7 +7,7 @@
 #include "CPU.hpp"
 #include "memory.hpp"
 
-UI::UI(int numCores)
+UI::UI(size_t numCores)
 {
     // temporary CPUCore object for initialization
     CPU::CPUCore tempCore;
@@ -23,12 +23,11 @@ UI::UI(int numCores)
 ftxui::Element UI::renderCPUCore(CPU::CPUCore core, double memPressure)
 {
     float coreUsage = static_cast<float>(core.usagePercent) / 100.0f;
-    float usageDisplay = coreUsage * 100.0f;
     coreUsage = std::clamp(coreUsage, 0.0f, 1.0f);
 
-    int red = 0;
-    int green = 0;
-    int blue = 0;
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
     if (memPressure <= 25.0f) {
         // green
         red = 46;

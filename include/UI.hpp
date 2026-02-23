@@ -20,7 +20,7 @@ class UI
         ftxui::Element renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, double memPressure, Memory::MemInfoDiff memInfoDiff, Memory::VmStatInstantDiff vmStatInstantDiff, float memPressureDiff);
 
     public:
-        UI(int numCores);
+        UI(size_t numCores);
 
 		int screenWidth = 0;
 
