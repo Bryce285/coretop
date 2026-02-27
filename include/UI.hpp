@@ -1,6 +1,6 @@
 #include <ftxui/dom/elements.hpp>
 #include <string>
-#include <format>
+#include <iomanip>
 
 #include "CPU.hpp"
 #include "memory.hpp"

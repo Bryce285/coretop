@@ -1,6 +1,5 @@
 #include <ftxui/dom/elements.hpp>
 #include <string>
-#include <format>
 #include <cmath>
 
 #include "UI.hpp"
@@ -167,9 +166,19 @@ ftxui::Element UI::renderMemory(Memory::MemInfo memInfo, Memory::VmStat vmStat, 
 
 ftxui::Element UI::renderHeader(CPU::Time uptime, CPU::Time idleTime, Memory::MemUsage memoryData)
 {
-    std::string uptimeStr = std::format("{:03}:{:02}:{:02}:{:02}", uptime.days, uptime.hours, uptime.minutes, uptime.seconds);
+	std::ostringstream uptimeStream;
+	uptimeStream << std::setw(3) << std::setfill('0') << uptime.days << ":"
+             	<< std::setw(2) << std::setfill('0') << uptime.hours << ":"
+             	<< std::setw(2) << std::setfill('0') << uptime.minutes << ":"
+             	<< std::setw(2) << std::setfill('0') << uptime.seconds;
+	std::string uptimeStr = uptimeStream.str();
 
-    std::string idleTimeStr = std::format("{:03}:{:02}:{:02}:{:02}", idleTime.days, idleTime.hours, idleTime.minutes, idleTime.seconds);
+	std::ostringstream idleStream;
+	idleStream << std::setw(3) << std::setfill('0') << idleTime.days << ":"
+           		<< std::setw(2) << std::setfill('0') << idleTime.hours << ":"
+           		<< std::setw(2) << std::setfill('0') << idleTime.minutes << ":"
+           		<< std::setw(2) << std::setfill('0') << idleTime.seconds;
+	std::string idleTimeStr = idleStream.str();
 
     std::string totalStr = std::to_string(memoryData.total);
     std::string usageStr = std::to_string(memoryData.usage);

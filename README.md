@@ -13,7 +13,7 @@ The goal of coretop is to provide a way to easily view and compare the load on b
 The easiest way to install a stable version of coretop on an x64 or aarch64 system is to download a binary from the coretop releases. To install coretop on a different architecture, you will need to clone this repository and build coretop from source using the provided CMakelists.txt.
 
 ## Dependencies
-The coretop binaries have no dependencies aside from glibc, libm, and a dynamic loader. These are already present on most Linux distributions.
+The coretop binaries are fully statically compiled, and have no dependencies. 
 
 ## Usage
 * After downloading a binary or building coretop from source, you can add the following to `~/.bashrc` to be able to run coretop from any directory:
